@@ -32,7 +32,7 @@ export default function EmojiSticker({ imageSize, stickerSource }) {
 
     return (
         <GestureDetector gesture={composedGesture}>
-            <Animated.View style={[containerStyle, { top: -350 }]}>
+            <Animated.View style={[containerStyle, { position: 'absolute', top: 50 }]}>
                 <Animated.Image
                     source={stickerSource}
                     resizeMode="contain"

@@ -1,18 +1,23 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as MediaLibrary from 'expo-media-library';
+import { captureRef } from 'react-native-view-shot';
 
 import ImageViewer from './components/image-viewer';
 import Button from './components/button';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import IconButton from './components/icon-button';
 import CircleButton from './components/circle-button';
 import EmojiPicker from './components/emoji-picker';
 import EmojiList from './components/emoji-list';
 import EmojiSticker from './components/emoji-sticker';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function App() {
+    const [mediaLibraryPermissionStatus, requestPermission] = MediaLibrary.usePermissions();
+    const imageRef = useRef()
+
     const [selectedImgUri, setSelectedImgUri] = useState(null)
     const [showOptions, setShowOptions] = useState(false)
     const [showEmojiPickerModal, setShowEmojiPickerModal] = useState(false)
@@ -27,8 +32,6 @@ export default function App() {
         if (!result.canceled) {
             setSelectedImgUri(result.assets[0].uri)
             setShowOptions(true)
-        } else {
-            alert('Something went wrong. Please try again');
         }
     }
     const onReset = () => {
@@ -41,13 +44,29 @@ export default function App() {
         setShowEmojiPickerModal(true)
     }
     const onSaveImageAsync = async () => {
+        try {
+            if (!mediaLibraryPermissionStatus.granted) {
+                await requestPermission();
+            }
+
+            const screenshootUri = await captureRef(imageRef)
+
+            await MediaLibrary.saveToLibraryAsync(screenshootUri)
+            if (screenshootUri) {
+                Alert.alert('Saved!', 'Your image has been saved to your photos.', [{ text: 'OK', style: 'cancel' }])
+            }
+        } catch (e) {
+            Alert.alert('Error!', 'Something went wrong while saving your image.', [{ text: 'OK', style: 'cancel' }])
+        }
     }
 
     return (
         <GestureHandlerRootView style={styles.container}>
             <View style={styles.imageContainer}>
-                <ImageViewer placeholderImageSource={require('./assets/images/background-image.png')} selectedImgUri={selectedImgUri} />
-                {pickedEmoji && <EmojiSticker imageSize={80} stickerSource={pickedEmoji} />}
+                <View ref={imageRef} collapsable={false}>
+                    <ImageViewer placeholderImageSource={require('./assets/images/background-image.png')} selectedImgUri={selectedImgUri} />
+                    {pickedEmoji && <EmojiSticker imageSize={80} stickerSource={pickedEmoji} />}
+                </View>
             </View>
             <EmojiPicker isVisible={showEmojiPickerModal} onClose={onCloseEmojiPickerModal}>
                 <EmojiList closeModal={onCloseEmojiPickerModal} onSelect={setPickedEmoji} />
