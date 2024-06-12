@@ -1,6 +1,6 @@
 # Sticker Smash App
 
-A fun app to add stickers to your images and share them with friends. Built with React Native and Expo.
+A simple app to add stickers to your images and download them. Built with React Native and Expo.
 
 ![Sticker Smash App Screenshot](./screenshot.png)
 
